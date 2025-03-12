@@ -15,6 +15,7 @@ namespace RemoteControlServer
         private Thread _serverThread;
         private bool _isRunning = false;
         private CancellationTokenSource _cts;
+
         public ScreenShareForm()
         {
             InitializeComponent();
@@ -23,8 +24,8 @@ namespace RemoteControlServer
 
         private void StartServer()
         {
-            _cts = new CancellationTokenSource(); 
-            CancellationToken token = _cts.Token; 
+            _cts = new CancellationTokenSource();
+            CancellationToken token = _cts.Token;
 
             _serverThread = new Thread(() =>
             {
@@ -35,7 +36,7 @@ namespace RemoteControlServer
                     _isRunning = true;
                     UpdateStatus("Server started... Waiting for connections...");
 
-                    while (true)
+                    while (!_cts.Token.IsCancellationRequested)
                     {
                         if (_server.Pending())
                         {
@@ -57,12 +58,14 @@ namespace RemoteControlServer
             _serverThread.Start();
         }
 
-
         private void HandleClient(TcpClient client, CancellationToken token)
         {
             NetworkStream stream = client.GetStream();
             UpdateStatus("Client is receiving the screen...");
-
+            lock (connectedClients)
+            {
+                connectedClients.Add(client);
+            }
             try
             {
                 while (!token.IsCancellationRequested)
@@ -76,7 +79,6 @@ namespace RemoteControlServer
                         stream.Write(BitConverter.GetBytes(buffer.Length), 0, 4);
                         stream.Write(buffer, 0, buffer.Length);
                     }
-
                     Thread.Sleep(100);
                 }
             }
@@ -90,7 +92,6 @@ namespace RemoteControlServer
                 UpdateStatus("Waiting for new connections...");
             }
         }
-
 
         private Bitmap CaptureScreen()
         {
@@ -117,19 +118,49 @@ namespace RemoteControlServer
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            _isRunning = false;
-            _server?.Stop();
+            StopServer();
         }
+        private void BtnSendMessage_Click(object sender, EventArgs e)
+        {
+            string message = txtMessageBox.Text.Trim();
+            if (!string.IsNullOrEmpty(message))
+            {
+              //  SendMessageToClients(message);
+                txtMessageBox.Clear();
+            }
+        }
+        private void SendMessageToClients(string message)
+        {
+            try
+            {
+                byte[] messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
+
+                foreach (TcpClient client in connectedClients) // Assuming a list of clients
+                {
+                    NetworkStream stream = client.GetStream();
+                    stream.Write(BitConverter.GetBytes(messageBytes.Length), 0, 4);
+                    stream.Write(messageBytes, 0, messageBytes.Length);
+                }
+
+                UpdateStatus("Message sent: " + message);
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("Error sending message: " + ex.Message);
+            }
+        }
+        private List<TcpClient> connectedClients = new List<TcpClient>();
+
+
         private void StopServer()
         {
             if (_isRunning)
             {
-                _cts.Cancel(); // Request cancellation
-                _server.Stop();
+                _cts.Cancel();
+                _server?.Stop();
                 _isRunning = false;
                 UpdateStatus("Server stopped.");
             }
         }
     }
-
 }

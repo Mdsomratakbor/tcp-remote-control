@@ -23,6 +23,9 @@
         #region Windows Form Designer generated code
 
         private System.Windows.Forms.Label lblStatus;
+        private System.Windows.Forms.TextBox txtMessageBox;
+        private System.Windows.Forms.Button btnSendMessage;
+
         /// <summary>
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
@@ -30,6 +33,8 @@
         private void InitializeComponent()
         {
             this.lblStatus = new System.Windows.Forms.Label();
+            this.txtMessageBox = new System.Windows.Forms.TextBox();
+            this.btnSendMessage = new System.Windows.Forms.Button();
             this.SuspendLayout();
 
             // 
@@ -42,7 +47,23 @@
             this.Controls.Add(this.lblStatus);
 
             // 
-            // Form1
+            // txtMessageBox
+            // 
+            this.txtMessageBox.Location = new System.Drawing.Point(10, 50);
+            this.txtMessageBox.Size = new System.Drawing.Size(300, 20);
+            this.Controls.Add(this.txtMessageBox);
+
+            // 
+            // btnSendMessage
+            // 
+            this.btnSendMessage.Location = new System.Drawing.Point(320, 50);
+            this.btnSendMessage.Size = new System.Drawing.Size(75, 23);
+            this.btnSendMessage.Text = "Send";
+            this.btnSendMessage.Click += new System.EventHandler(this.BtnSendMessage_Click);
+            this.Controls.Add(this.btnSendMessage);
+
+            // 
+            // ScreenShareForm
             // 
             this.ClientSize = new System.Drawing.Size(400, 200);
             this.Text = "Remote Control Server";
