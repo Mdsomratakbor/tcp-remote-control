@@ -79,7 +79,7 @@ namespace RemoteControlServer
                         stream.Write(BitConverter.GetBytes(buffer.Length), 0, 4);
                         stream.Write(buffer, 0, buffer.Length);
                     }
-                    Thread.Sleep(100);
+                    Thread.Sleep(10);
                 }
             }
             catch (Exception ex)
